@@ -245,28 +245,46 @@ export default function KpiDashboardPage() {
     }
 
     const loadDashboard = async () => {
-      const requestedApiPeriodo = periodo || 1;
-      const initialResumenData = await dashboardApi.resumen({ cargoId, anio, periodo: requestedApiPeriodo });
+      // Si ya conocemos el periodo seleccionado, disparamos resumen y kpis en paralelo de inmediato
+      if (periodo) {
+        const [resumenData, kpisData] = await Promise.all([
+          dashboardApi.resumen({ cargoId, anio, periodo }),
+          kpisApi.list({ cargoId, anio, periodo })
+        ]);
+        const disponibles = resumenData.resumen.periodosDisponibles || [];
+        if (!disponibles.includes(periodo)) {
+          const defaultPeriodo = getDefaultPeriodo(disponibles);
+          if (defaultPeriodo && defaultPeriodo !== periodo) {
+            const [fallbackResumen, fallbackKpis] = await Promise.all([
+              dashboardApi.resumen({ cargoId, anio, periodo: defaultPeriodo }),
+              kpisApi.list({ cargoId, anio, periodo: defaultPeriodo })
+            ]);
+            return { resumenData: fallbackResumen, kpisData: fallbackKpis, nextPeriodo: defaultPeriodo };
+          }
+        }
+        return { resumenData, kpisData, nextPeriodo: periodo };
+      }
+
+      // Si no hay periodo seleccionado aun (primer arranque), consultamos resumen para descubrir periodos disponibles
+      const initialResumenData = await dashboardApi.resumen({ cargoId, anio, periodo: 1 });
       const disponibles = initialResumenData.resumen.periodosDisponibles || [];
       const defaultPeriodo = getDefaultPeriodo(disponibles);
-      const requestedPeriodo = periodo || defaultPeriodo;
-      const nextPeriodo = disponibles.includes(requestedPeriodo) ? requestedPeriodo : defaultPeriodo;
 
-      if (!nextPeriodo) {
+      if (!defaultPeriodo) {
         return { resumenData: initialResumenData, kpisData: { rows: [] }, nextPeriodo: null };
       }
 
-      const [resumenData, kpisData] = nextPeriodo === requestedApiPeriodo
+      const [resumenData, kpisData] = defaultPeriodo === 1
         ? [
           initialResumenData,
-          await kpisApi.list({ cargoId, anio, periodo: nextPeriodo })
+          await kpisApi.list({ cargoId, anio, periodo: defaultPeriodo })
         ]
         : await Promise.all([
-          dashboardApi.resumen({ cargoId, anio, periodo: nextPeriodo }),
-          kpisApi.list({ cargoId, anio, periodo: nextPeriodo })
+          dashboardApi.resumen({ cargoId, anio, periodo: defaultPeriodo }),
+          kpisApi.list({ cargoId, anio, periodo: defaultPeriodo })
         ]);
 
-      return { resumenData, kpisData, nextPeriodo };
+      return { resumenData, kpisData, nextPeriodo: defaultPeriodo };
     };
 
     loadDashboard()
