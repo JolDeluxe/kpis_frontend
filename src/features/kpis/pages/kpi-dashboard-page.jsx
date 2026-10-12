@@ -328,7 +328,19 @@ export default function KpiDashboardPage() {
   };
 
   const periodoLabel = useMemo(() => PERIODOS.find((item) => item.id === periodo)?.label || periodo, [periodo]);
-  const total = resumen?.calificacionGeneralRaw?.replace(/\u2003/g, ' ').trim() || '--';
+  const total = useMemo(() => {
+    const raw = resumen?.calificacionGeneralRaw?.replace(/\u2003/g, ' ')?.replace(/\?/g, '')?.trim();
+    if (!raw || raw === '--') return '--';
+    if (raw.includes('%')) {
+      const parsed = Number(raw.replace(/%/g, '').trim());
+      return !Number.isNaN(parsed) ? `${parsed.toFixed(2)} %` : raw;
+    }
+    const num = Number(raw);
+    if (!Number.isNaN(num)) {
+      return num <= 1 ? `${(num * 100).toFixed(2)} %` : `${num.toFixed(2)} %`;
+    }
+    return raw;
+  }, [resumen?.calificacionGeneralRaw]);
   const isGlobalDashboard = resumen?.cargo?.id === GLOBAL_CARGO_ID;
   const cargoNombre = isGlobalDashboard ? 'MBC' : resumen?.cargo?.nombre || '';
   const hasVisibleRows = rows.length > 0 || refreshing;
