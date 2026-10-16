@@ -770,7 +770,7 @@ button:disabled { cursor: not-allowed; }
 .trend-neutral { background: #d1d5db; }
 .trend-green-up, .trend-green-down { background: #00a014; }
 .trend-green-check { background: #00a014; }
-.trend-red-up { background: #e82c4c; }
+.trend-red-up, .trend-red-down { background: #e82c4c; }
 .trend-red-x { background: #e82c4c; }
 .summary-footer {
   display: grid;
@@ -2653,6 +2653,7 @@ button:disabled { cursor: not-allowed; }
   .trend-green-down,
   .trend-green-check { background: radial-gradient(circle at 35% 24%, #86efac, #00a014 72%); }
   .trend-red-up,
+  .trend-red-down,
   .trend-red-x { background: radial-gradient(circle at 35% 24%, #fb7185, #e82c4c 72%); }
   .kpi-mobile-metric-band {
     grid-template-columns: repeat(2, minmax(0, 1fr));
