@@ -55,7 +55,7 @@ export default function LoginPage() {
         <div className="login-brand">
           <img src="/img/01_Cuadra.webp" alt="Cuadra" />
         </div>
-        <h1>KPIs Jefaturas</h1>
+        <h1>KPIs MBC</h1>
         <form onSubmit={submit} className="login-form">
           <label>
             <span>Usuario</span>
